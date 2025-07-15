@@ -6,6 +6,7 @@ import Logo from "@/public/logo.png"
 import { ThemeToggle } from "@/components/ui/themeToggle"
 import { authClient } from "@/lib/auth-client"
 import { buttonVariants } from "@/components/ui/button"
+import { UserDropdown } from "./UserDropdown";
 
 const navigationItems = [
     {name: 'Home', href: '/'},
@@ -42,7 +43,11 @@ export function Navbar() {
                         <ThemeToggle />
 
                         { isPending ? null : session ? (
-                            <p>logged in</p>
+                            <UserDropdown 
+                                email={session.user.email} 
+                                image={session.user.image || ""}
+                                name={session.user.name}
+                            />
                         ): (
                             <>
                                 <Link 
