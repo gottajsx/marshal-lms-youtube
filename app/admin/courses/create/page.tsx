@@ -13,6 +13,7 @@ import slugify from "slugify";
 import { Title } from "@radix-ui/react-dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RichTextEditor } from "@/components/rich-text-editor/Editor";
 
 export default function CourseCreationPage() {
     // 1. Define your form
@@ -129,7 +130,8 @@ export default function CourseCreationPage() {
                                     <FormItem className="w-full">
                                         <FormLabel>Description</FormLabel>
                                         <FormControl>
-                                            <Textarea placeholder="Small Description" className="min-h-[120px]" {...field}/>
+                                            <RichTextEditor />
+                                            {/* <Textarea placeholder="Small Description" className="min-h-[120px]" {...field}/> */}
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
