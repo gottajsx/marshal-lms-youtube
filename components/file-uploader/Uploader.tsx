@@ -138,6 +138,60 @@ export function Uploader() {
         }
     }, [fileState.objectUrl]);
 
+    
+    async function handleRemoveFile() {
+        if (fileState.isDeleting || !fileState.objectUrl) return;
+
+        try {
+            setFileState((prev) => ({
+                ...prev,
+                isDeleting: true,
+            }));
+
+            const response = await fetch('/api/s3/delete', {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json "},
+                body: JSON.stringify({
+                    key: fileState.key,
+                })
+            });
+
+            if(!response.ok) {
+                toast.error("Failed to remove file from storag");
+                setFileState((prev) => ({
+                    ...prev,
+                    isDeleting: true,
+                    error: true,
+                }));
+
+                return;
+            }
+
+            if (fileState.objectUrl && !fileState.objectUrl.startsWith("http")) {
+                URL.revokeObjectURL(fileState.objectUrl);
+            }
+
+            setFileState(() => ({
+                file: null,
+                uploading: false,
+                progress: 0,
+                objectUrl: undefined,
+                error: false,
+                fileType: 'image',
+                id: null,
+                isDeleting: false,
+            }));
+
+            toast.success("File removed successfully");
+        } catch {
+            toast.error("Error removing file. Please try again.");
+            setFileState((prev) => ({
+                ...prev,
+                isDeleting: false,
+                error: true,
+            }));
+        }
+    }
 
 
     function rejectedFiles(fileRejection: FileRejection[]) {
@@ -174,7 +228,11 @@ export function Uploader() {
 
         if(fileState.objectUrl) {
             return(
-                <RenderUploadedState previewUrl={fileState.objectUrl} />
+                <RenderUploadedState 
+                    handleRemoveFile={handleRemoveFile}
+                    previewUrl={fileState.objectUrl} 
+                    isDeleting={fileState.isDeleting}
+                />
             )
         }
 
@@ -196,6 +254,7 @@ export function Uploader() {
         multiple: false,
         maxSize: 5 * 1024 * 1024, // 5mv calculation
         onDropRejected: rejectedFiles,
+        disabled: fileState.uploading || !!fileState.objectUrl,
     });
     
     return (
