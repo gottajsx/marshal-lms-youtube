@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {FileRejection, useDropzone} from 'react-dropzone'
 import { Card, CardContent } from '../ui/card';
 import { cn } from '@/lib/utils';
-import { RenderEmptyState } from './RenderState';
+import { RenderEmptyState, RenderErrorState, RenderUploadedState, RenderUploadingState } from './RenderState';
 import { toast } from 'sonner';
 import { v4 as uuidv4 } from "uuid";
 
@@ -66,14 +66,62 @@ export function Uploader() {
             }
 
             const {presignedUrl, key} = await presignedResponse.json();
+
+            await new Promise<void>((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+
+                xhr.upload.onprogress = (event) => {
+                    if(event.lengthComputable) {
+                        const percentageCompleted = (event.loaded / event.total) * 100;
+                        setFileState((prev) => ({
+                            ...prev,
+                            progress: Math.round(percentageCompleted),
+                        }));
+                    }
+                }
+
+                xhr.onload = () => {
+                    if(xhr.status === 200 || xhr.status === 204) {
+                        setFileState((prev) => ({
+                            ...prev,
+                            progress: 100,
+                            uploading: false,
+                            key: key,
+                        }));
+                        toast.success('File uploaded successfully');
+
+                        resolve();
+                    } else {
+                        reject(new Error('Upload failed...'))
+                    }
+                }
+                
+                xhr.onerror = () => {
+                    reject(new Error('Upload failed...'))
+                };
+
+                xhr.open('PUT', presignedUrl);
+                xhr.setRequestHeader('Content-Type', file.type);
+                xhr.send(file);
+            });
         } catch {
-            
+            toast.error("Something went wrong");
+            setFileState((prev) => ({
+                ...prev,
+                progress: 0,
+                error: true,
+                uploading: false,
+            }));
         }
     }
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if(acceptedFiles.length > 0) {
             const file = acceptedFiles[0]
+
+            if(fileState.objectUrl && !fileState.objectUrl.startsWith("http")) {
+                URL.revokeObjectURL(fileState.objectUrl);
+            }
 
             setFileState({
                 file: file,
@@ -84,9 +132,13 @@ export function Uploader() {
                 id: uuidv4(),
                 isDeleting: false,
                 fileType: "image",
-            })
+            });
+
+            uploadFile(file);
         }
-    }, [])
+    }, [fileState.objectUrl]);
+
+
 
     function rejectedFiles(fileRejection: FileRejection[]) {
         if(fileRejection.length) {
@@ -106,6 +158,37 @@ export function Uploader() {
         }
     }
 
+    function renderContent() {
+        if(fileState.uploading) {
+            return(
+                <RenderUploadingState 
+                    file={fileState.file as File}
+                    progress={fileState.progress}
+                />
+            )
+        };
+
+        if(fileState.error) {
+            return <RenderErrorState />
+        }
+
+        if(fileState.objectUrl) {
+            return(
+                <RenderUploadedState previewUrl={fileState.objectUrl} />
+            )
+        }
+
+        return <RenderEmptyState isDragActive={isDragActive} />
+    }
+
+    useEffect(() => {
+        return () => {
+            if(fileState.objectUrl && !fileState.objectUrl.startsWith("http")) {
+                URL.revokeObjectURL(fileState.objectUrl);
+            }
+        }
+    }, [fileState.objectUrl]);
+
     const {getRootProps, getInputProps, isDragActive} = useDropzone({
         onDrop,
         accept: { "image/*": [] },
@@ -122,7 +205,7 @@ export function Uploader() {
         )}>
             <CardContent className="flex items-center justify-center h-full w-full p-4">
                 <input {...getInputProps()} />
-                <RenderEmptyState isDragActive={isDragActive} />
+                {renderContent()}
             </CardContent>
             
         </Card>
