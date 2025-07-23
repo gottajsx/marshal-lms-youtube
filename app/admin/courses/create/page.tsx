@@ -1,18 +1,47 @@
 "use client";
 
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { courseCategories, courseLevels, courseSchema, CourseSchemaType, courseStatus } from "@/lib/zodSchemas";
-import { ArrowLeft, Loader2, PlusIcon, SparkleIcon } from "lucide-react";
+import { 
+    Card, 
+    CardContent, 
+    CardDescription, 
+    CardHeader, 
+    CardTitle 
+} from "@/components/ui/card";
+import { 
+    courseCategories, 
+    courseLevels, 
+    courseSchema, 
+    CourseSchemaType, 
+    courseStatus 
+} from "@/lib/zodSchemas";
+import { 
+    ArrowLeft, 
+    Loader2, 
+    PlusIcon, 
+    SparkleIcon 
+} from "lucide-react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { 
+    Form, 
+    FormControl, 
+    FormField, 
+    FormItem, 
+    FormLabel, 
+    FormMessage 
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import slugify from "slugify";
-import { Title } from "@radix-ui/react-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from "@/components/ui/select";
 import { RichTextEditor } from "@/components/rich-text-editor/Editor";
 import { Uploader } from "@/components/file-uploader/Uploader";
 import { useTransition } from "react";
@@ -22,8 +51,8 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 export default function CourseCreationPage() {
-const [pending, startTransition] = useTransition();
-const router = useRouter();
+    const [pending, startTransition] = useTransition();
+    const router = useRouter();
 
     // 1. Define your form
     const form = useForm<CourseSchemaType>({
